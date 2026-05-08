@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium TV Remote</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .remote-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 300px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.primary {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            font-weight: 600;
+        }
+
+        .d-pad {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left center right"
+                ". down .";
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .d-pad .btn-up { grid-area: up; }
+        .d-pad .btn-down { grid-area: down; }
+        .d-pad .btn-left { grid-area: left; }
+        .d-pad .btn-right { grid-area: right; }
+        .d-pad .btn-center { grid-area: center; background: rgba(56, 189, 248, 0.2); border-radius: 50%; width: 80px; height: 80px;}
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        .status-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .setup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+
+        input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin: 10px 0;
+            width: 80%;
+            max-width: 300px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div id="setup" class="setup-overlay">
+        <h1>Connect to TV</h1>
+        <p>Enter the IP address of your Android TV</p>
+        <input type="text" id="ip-input" placeholder="192.168.1.100">
+        <button class="btn primary" style="width: 200px;" onclick="connect()">Connect</button>
+    </div>
+
+    <div id="pairing" class="setup-overlay hidden">
+        <h1>Pairing</h1>
+        <p>Enter the 6-digit code shown on your TV</p>
+        <input type="text" id="pairing-code" placeholder="XXXXXX">
+        <button class="btn primary" style="width: 200px;" onclick="finishPairing()">Pair</button>
+    </div>
+
+    <div class="remote-container">
+        <div class="header">
+            <span id="status-dot" class="status-dot"></span>
+            TV REMOTE
+        </div>
+
+        <div class="btn-grid">
+            <div class="btn" onclick="send('POWER')">PWR</div>
+            <div class="btn" onclick="send('MUTE')">MUTE</div>
+            <div class="btn" onclick="send('SETTINGS')">⚙️</div>
+        </div>
+
+        <div class="d-pad">
+            <div class="btn btn-up" onclick="send('DPAD_UP')">▲</div>
+            <div class="btn btn-left" onclick="send('DPAD_LEFT')">◀</div>
+            <div class="btn btn-center" onclick="send('DPAD_CENTER')">OK</div>
+            <div class="btn btn-right" onclick="send('DPAD_RIGHT')">▶</div>
+            <div class="btn btn-down" onclick="send('DPAD_DOWN')">▼</div>
+        </div>
+
+        <div class="btn-grid">
+            <div class="btn" onclick="send('BACK')">BACK</div>
+            <div class="btn" onclick="send('HOME')">HOME</div>
+            <div class="btn" onclick="send('MENU')">MENU</div>
+        </div>
+
+        <div class="btn-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="btn" onclick="send('VOLUME_DOWN')">VOL -</div>
+            <div class="btn" onclick="send('VOLUME_UP')">VOL +</div>
+        </div>
+
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <input type="text" id="text-input" placeholder="Type here..." style="margin: 0; flex: 1;">
+            <button class="btn" onclick="sendText()" style="padding: 10px 15px;">SEND</button>
+        </div>
+    </div>
+
+    <script>
+        let currentHost = '';
+
+        async function sendText() {
+            const text = document.getElementById('text-input').value;
+            if (!text) return;
+            await fetch('/send_text', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: currentHost, text: text})
+            });
+            document.getElementById('text-input').value = '';
+        }
+
+        async function connect() {
+            const ip = document.getElementById('ip-input').value;
+            if (!ip) return;
+            currentHost = ip;
+            
+            const resp = await fetch('/connect', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: ip})
+            });
+            const data = await resp.json();
+            
+            if (data.status === 'connected') {
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('status-dot').classList.add('online');
+            } else {
+                startPairing();
+            }
+        }
+
+        async function startPairing() {
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('pairing').classList.remove('hidden');
+            await fetch('/start_pairing', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: currentHost})
+            });
+        }
+
+        async function finishPairing() {
+            const code = document.getElementById('pairing-code').value;
+            const resp = await fetch('/finish_pairing', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: currentHost, code: code})
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                document.getElementById('pairing').classList.add('hidden');
+                document.getElementById('status-dot').classList.add('online');
+            } else {
+                alert('Pairing failed: ' + data.error);
+            }
+        }
+
+        async function send(key) {
+            const keyMap = {
+                'POWER': 26,
+                'DPAD_UP': 19,
+                'DPAD_DOWN': 20,
+                'DPAD_LEFT': 21,
+                'DPAD_RIGHT': 22,
+                'DPAD_CENTER': 66,
+                'BACK': 4,
+                'HOME': 3,
+                'MENU': 82,
+                'VOLUME_UP': 24,
+                'VOLUME_DOWN': 25,
+                'MUTE': 164,
+                'SETTINGS': 176
+            };
+            
+            const keyCode = keyMap[key] || key;
+            
+            await fetch('/command', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: currentHost, key: keyCode})
+            });
+        }
+    </script>
+</body>
+</html>
