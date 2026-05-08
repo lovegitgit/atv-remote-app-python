@@ -92,19 +92,42 @@
 
         .d-pad {
             display: grid;
-            grid-template-areas: 
-                ". up ."
-                "left center right"
-                ". down .";
-            gap: 10px;
-            margin: 20px 0;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px auto;
+            width: 240px;
+            justify-items: center;
+            align-items: center;
         }
 
-        .d-pad .btn-up { grid-area: up; }
-        .d-pad .btn-down { grid-area: down; }
-        .d-pad .btn-left { grid-area: left; }
-        .d-pad .btn-right { grid-area: right; }
-        .d-pad .btn-center { grid-area: center; background: rgba(56, 189, 248, 0.2); border-radius: 50%; width: 80px; height: 80px;}
+        .d-pad .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            padding: 0;
+            font-size: 1.5rem;
+        }
+
+        .d-pad .btn-up { grid-area: 1 / 2; }
+        .d-pad .btn-left { grid-area: 2 / 1; }
+        .d-pad .btn-center { 
+            grid-area: 2 / 2; 
+            background: rgba(56, 189, 248, 0.2); 
+            border: 2px solid var(--accent-color);
+            width: 75px;
+            height: 75px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .d-pad .btn-right { grid-area: 2 / 3; }
+        .d-pad .btn-down { grid-area: 3 / 2; }
+
+        .d-pad .btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
 
         .status-dot {
             width: 10px;
@@ -161,7 +184,7 @@
     <div id="setup" class="setup-overlay">
         <h1>Connect to TV</h1>
         <p>Enter the IP address of your Android TV</p>
-        <input type="text" id="ip-input" placeholder="192.168.1.100">
+        <input type="text" id="ip-input" value="{{ default_ip }}" placeholder="192.168.1.100">
         <button class="btn primary" style="width: 200px;" onclick="connect()">Connect</button>
     </div>
 
@@ -185,11 +208,19 @@
         </div>
 
         <div class="d-pad">
-            <div class="btn btn-up" onclick="send('DPAD_UP')">▲</div>
-            <div class="btn btn-left" onclick="send('DPAD_LEFT')">◀</div>
+            <div class="btn btn-up" onclick="send('DPAD_UP')">
+                <svg viewBox="0 0 24 24"><path d="M12 4l-8 12h16z"/></svg>
+            </div>
+            <div class="btn btn-left" onclick="send('DPAD_LEFT')">
+                <svg viewBox="0 0 24 24" style="transform: rotate(-90deg)"><path d="M12 4l-8 12h16z"/></svg>
+            </div>
             <div class="btn btn-center" onclick="send('DPAD_CENTER')">OK</div>
-            <div class="btn btn-right" onclick="send('DPAD_RIGHT')">▶</div>
-            <div class="btn btn-down" onclick="send('DPAD_DOWN')">▼</div>
+            <div class="btn btn-right" onclick="send('DPAD_RIGHT')">
+                <svg viewBox="0 0 24 24" style="transform: rotate(90deg)"><path d="M12 4l-8 12h16z"/></svg>
+            </div>
+            <div class="btn btn-down" onclick="send('DPAD_DOWN')">
+                <svg viewBox="0 0 24 24" style="transform: rotate(180deg)"><path d="M12 4l-8 12h16z"/></svg>
+            </div>
         </div>
 
         <div class="btn-grid">

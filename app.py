@@ -1,10 +1,18 @@
 import os
 import asyncio
 import threading
-from flask import Flask, render_template, request, jsonify
+import configparser
+from flask import Flask, render_template, request, jsonify, session
 from androidtvremote2 import AndroidTVRemote
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+# Read configuration
+config = configparser.ConfigParser()
+config.read('config.ini')
+ACCESS_PASSWORD = config.get('DEFAULT', 'password', fallback='123456')
+DEFAULT_IP = config.get('DEFAULT', 'default_ip', fallback='192.168.1.200')
 
 # Storage for certificates and active remotes
 CERT_FILE = "cert.pem"
@@ -24,9 +32,27 @@ def run_async(coro):
     future = asyncio.run_coroutine_threadsafe(coro, async_loop)
     return future.result()
 
+@app.before_request
+def check_login():
+    # Paths that don't require authentication
+    if request.path in ['/login', '/static/favicon.ico'] or request.path.startswith('/static/'):
+        return
+    if 'authenticated' not in session and request.path != '/':
+        return jsonify({"error": "unauthorized"}), 401
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    if 'authenticated' not in session:
+        return render_template('login.html')
+    return render_template('index.html', default_ip=DEFAULT_IP)
+
+@app.route('/login', methods=['POST'])
+def login():
+    password = request.json.get('password')
+    if password == ACCESS_PASSWORD:
+        session['authenticated'] = True
+        return jsonify({"status": "success"})
+    return jsonify({"status": "fail", "message": "Invalid password"}), 403
 
 @app.route('/connect', methods=['POST'])
 def connect():
@@ -61,9 +87,6 @@ def connect():
 @app.route('/start_pairing', methods=['POST'])
 def start_pairing():
     host = request.json.get('host')
-    if not host:
-        return jsonify({"error": "Missing host"}), 400
-
     async def do_start_pairing():
         remote = AndroidTVRemote("PythonRemote", CERT_FILE, KEY_FILE, host, loop=async_loop)
         await remote.async_generate_cert_if_missing()
@@ -104,7 +127,6 @@ def command():
     if not remote:
         return jsonify({"error": "Not connected"}), 400
     
-    # send_key_command is safe to call from any thread as it uses loop.call_soon
     try:
         remote.send_key_command(key, "SHORT")
         return jsonify({"status": "ok"})
@@ -126,5 +148,4 @@ def send_text():
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
-    # use_reloader=False to avoid starting multiple background threads
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
