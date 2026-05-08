@@ -14,27 +14,21 @@ config.read('config.ini')
 ACCESS_PASSWORD = config.get('DEFAULT', 'password', fallback='123456')
 DEFAULT_IP = config.get('DEFAULT', 'default_ip', fallback='192.168.1.200')
 
-# Storage for certificates and active remotes
 CERT_FILE = "cert.pem"
 KEY_FILE = "key.pem"
-remotes = {}  # host -> AndroidTVRemote object
+remotes = {}
 
-# Global event loop running in a background thread
 async_loop = asyncio.new_event_loop()
-
 def run_async_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
-
 threading.Thread(target=run_async_loop, args=(async_loop,), daemon=True).start()
 
 def run_async(coro):
-    future = asyncio.run_coroutine_threadsafe(coro, async_loop)
-    return future.result()
+    return asyncio.run_coroutine_threadsafe(coro, async_loop).result()
 
 @app.before_request
 def check_login():
-    # Paths that don't require authentication
     if request.path in ['/login', '/static/favicon.ico'] or request.path.startswith('/static/'):
         return
     if 'authenticated' not in session and request.path != '/':
@@ -52,100 +46,67 @@ def login():
     if password == ACCESS_PASSWORD:
         session['authenticated'] = True
         return jsonify({"status": "success"})
-    return jsonify({"status": "fail", "message": "Invalid password"}), 403
+    return jsonify({"status": "fail"}), 403
 
 @app.route('/connect', methods=['POST'])
 def connect():
     host = request.json.get('host')
-    if not host:
-        return jsonify({"error": "Missing host"}), 400
-    
     async def do_connect():
-        if host in remotes:
-            try:
-                await remotes[host].async_connect()
-                return True
-            except Exception:
-                pass
-        
         remote = AndroidTVRemote("PythonRemote", CERT_FILE, KEY_FILE, host, loop=async_loop)
         await remote.async_generate_cert_if_missing()
         try:
             await remote.async_connect()
             remotes[host] = remote
             return True
-        except Exception as e:
-            print(f"Connect error: {e}")
+        except Exception:
             return False
-
     success = run_async(do_connect())
-    if success:
-        return jsonify({"status": "connected"})
-    else:
-        return jsonify({"status": "pairing_required"})
+    return jsonify({"status": "connected" if success else "pairing_required"})
 
 @app.route('/start_pairing', methods=['POST'])
 def start_pairing():
     host = request.json.get('host')
-    async def do_start_pairing():
+    async def do_start():
         remote = AndroidTVRemote("PythonRemote", CERT_FILE, KEY_FILE, host, loop=async_loop)
         await remote.async_generate_cert_if_missing()
         await remote.async_start_pairing()
         remotes[host] = remote
-        return True
-
-    try:
-        run_async(do_start_pairing())
-        return jsonify({"status": "pairing_started"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    run_async(do_start())
+    return jsonify({"status": "pairing_started"})
 
 @app.route('/finish_pairing', methods=['POST'])
 def finish_pairing():
     host = request.json.get('host')
     code = request.json.get('code')
     remote = remotes.get(host)
-    if not remote:
-        return jsonify({"error": "No remote for host"}), 400
-    
-    async def do_finish_pairing():
+    async def do_finish():
         await remote.async_finish_pairing(code)
         await remote.async_connect()
-        return True
-
-    try:
-        run_async(do_finish_pairing())
-        return jsonify({"status": "success"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    run_async(do_finish())
+    return jsonify({"status": "success"})
 
 @app.route('/command', methods=['POST'])
 def command():
     host = request.json.get('host')
-    key = request.json.get('key')
+    key = int(request.json.get('key'))
+    direction = request.json.get('direction', 'SHORT')
     remote = remotes.get(host)
-    if not remote:
-        return jsonify({"error": "Not connected"}), 400
-    
-    try:
-        remote.send_key_command(key, "SHORT")
-        return jsonify({"status": "ok"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    if remote:
+        # Map START/STOP from frontend to START_LONG/END_LONG in protocol
+        proto_direction = direction
+        if direction == "START": proto_direction = "START_LONG"
+        if direction == "STOP": proto_direction = "END_LONG"
+        
+        remote.send_key_command(key, proto_direction)
+    return jsonify({"status": "ok"})
 
 @app.route('/send_text', methods=['POST'])
 def send_text():
     host = request.json.get('host')
     text = request.json.get('text')
     remote = remotes.get(host)
-    if not remote:
-        return jsonify({"error": "Not connected"}), 400
-    
-    try:
-        remote.send_text(text)
-        return jsonify({"status": "ok"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    if remote: remote.send_text(text)
+    return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)

@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium TV Remote</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TV Remote Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -14,316 +14,188 @@
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: 'Inter', sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
+            background: var(--bg-color); color: var(--text-color);
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden;
         }
 
         .remote-container {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 40px;
             padding: 30px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
             width: 300px;
-            animation: fadeIn 0.8s ease-out;
+            display: flex; flex-direction: column; gap: 20px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .header { text-align: center; font-weight: 600; color: var(--accent-color); font-size: 1.1rem; }
 
-        .header {
-            text-align: center;
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: var(--accent-color);
-            margin-bottom: 10px;
-        }
-
-        .btn-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .btn {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            border-radius: 20px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            user-select: none;
+            color: white; border-radius: 20px; padding: 15px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.1s; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none; /* 防止浏览器拦截触摸 */
         }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(1.05);
-            border-color: var(--accent-color);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn.primary {
-            background: var(--accent-color);
-            color: var(--bg-color);
-            font-weight: 600;
-        }
+        .btn:active { transform: scale(0.92); background: rgba(56, 189, 248, 0.2); border-color: var(--accent-color); }
 
         .d-pad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: grid; grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px auto;
-            width: 240px;
-            justify-items: center;
-            align-items: center;
+            gap: 15px; margin: 10px auto; width: 240px;
+            justify-items: center; align-items: center;
         }
-
-        .d-pad .btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            padding: 0;
-            font-size: 1.5rem;
-        }
-
-        .d-pad .btn-up { grid-area: 1 / 2; }
-        .d-pad .btn-left { grid-area: 2 / 1; }
+        .d-pad .btn { width: 60px; height: 60px; border-radius: 50%; padding: 0; }
         .d-pad .btn-center { 
-            grid-area: 2 / 2; 
-            background: rgba(56, 189, 248, 0.2); 
-            border: 2px solid var(--accent-color);
-            width: 75px;
-            height: 75px;
-            font-size: 1rem;
-            font-weight: bold;
+            width: 80px; height: 80px; border: 2px solid var(--accent-color); 
+            background: rgba(56, 189, 248, 0.1); font-weight: bold; font-size: 1rem;
         }
-        .d-pad .btn-right { grid-area: 2 / 3; }
-        .d-pad .btn-down { grid-area: 3 / 2; }
+        .d-pad .btn svg { width: 24px; height: 24px; fill: white; pointer-events: none; }
 
-        .d-pad .btn svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
+        .overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: var(--bg-color); z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
         }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            background: #ef4444;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        .status-dot.online {
-            background: #10b981;
-            box-shadow: 0 0 10px #10b981;
-        }
-
-        .setup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-            text-align: center;
-        }
-
+        input { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 15px; border-radius: 12px; margin: 10px 0; width: 250px; text-align: center; font-size: 1.1rem; }
         .hidden { display: none !important; }
-
-        input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin: 10px 0;
-            width: 80%;
-            max-width: 300px;
-            font-size: 1rem;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
+        .status-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-dot.online { background: #10b981; box-shadow: 0 0 8px #10b981; }
     </style>
 </head>
 <body>
-    <div id="setup" class="setup-overlay">
-        <h1>Connect to TV</h1>
-        <p>Enter the IP address of your Android TV</p>
-        <input type="text" id="ip-input" value="{{ default_ip }}" placeholder="192.168.1.100">
-        <button class="btn primary" style="width: 200px;" onclick="connect()">Connect</button>
+    <div id="setup" class="overlay">
+        <h2 style="color: var(--accent-color)">Connect TV</h2>
+        <input type="text" id="ip-input" value="{{ default_ip }}">
+        <button class="btn" style="background: var(--accent-color); color: #000; width: 250px; font-weight: bold;" onclick="connect()">CONNECT</button>
     </div>
 
-    <div id="pairing" class="setup-overlay hidden">
-        <h1>Pairing</h1>
-        <p>Enter the 6-digit code shown on your TV</p>
-        <input type="text" id="pairing-code" placeholder="XXXXXX">
-        <button class="btn primary" style="width: 200px;" onclick="finishPairing()">Pair</button>
+    <div id="pairing" class="overlay hidden">
+        <h2>Enter Pairing Code</h2>
+        <input type="text" id="pair-code" placeholder="XXXXXX">
+        <button class="btn" style="background: var(--accent-color); color: #000; width: 250px; font-weight: bold;" onclick="finishPairing()">PAIR</button>
     </div>
 
     <div class="remote-container">
         <div class="header">
             <span id="status-dot" class="status-dot"></span>
-            TV REMOTE
+            TV REMOTE PRO
         </div>
 
         <div class="btn-grid">
-            <div class="btn" onclick="send('POWER')">PWR</div>
-            <div class="btn" onclick="send('MUTE')">MUTE</div>
-            <div class="btn" onclick="send('SETTINGS')">⚙️</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('POWER',event)" onmouseup="release('POWER')" onmouseleave="release('POWER')" ontouchstart="press('POWER',event)" ontouchend="release('POWER')" ontouchcancel="release('POWER')" style="color: #ef4444;">PWR</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('MUTE',event)" onmouseup="release('MUTE')" onmouseleave="release('MUTE')" ontouchstart="press('MUTE',event)" ontouchend="release('MUTE')" ontouchcancel="release('MUTE')">MUTE</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('SETTINGS',event)" onmouseup="release('SETTINGS')" onmouseleave="release('SETTINGS')" ontouchstart="press('SETTINGS',event)" ontouchend="release('SETTINGS')" ontouchcancel="release('SETTINGS')">⚙️</div>
         </div>
 
         <div class="d-pad">
-            <div class="btn btn-up" onclick="send('DPAD_UP')">
+            <div></div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('DPAD_UP',event)" onmouseup="release('DPAD_UP')" onmouseleave="release('DPAD_UP')" ontouchstart="press('DPAD_UP',event)" ontouchend="release('DPAD_UP')" ontouchcancel="release('DPAD_UP')">
                 <svg viewBox="0 0 24 24"><path d="M12 4l-8 12h16z"/></svg>
             </div>
-            <div class="btn btn-left" onclick="send('DPAD_LEFT')">
+            <div></div>
+
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('DPAD_LEFT',event)" onmouseup="release('DPAD_LEFT')" onmouseleave="release('DPAD_LEFT')" ontouchstart="press('DPAD_LEFT',event)" ontouchend="release('DPAD_LEFT')" ontouchcancel="release('DPAD_LEFT')">
                 <svg viewBox="0 0 24 24" style="transform: rotate(-90deg)"><path d="M12 4l-8 12h16z"/></svg>
             </div>
-            <div class="btn btn-center" onclick="send('DPAD_CENTER')">OK</div>
-            <div class="btn btn-right" onclick="send('DPAD_RIGHT')">
+            <div class="btn btn-center" oncontextmenu="return false;" onmousedown="press('DPAD_CENTER',event)" onmouseup="release('DPAD_CENTER')" onmouseleave="release('DPAD_CENTER')" ontouchstart="press('DPAD_CENTER',event)" ontouchend="release('DPAD_CENTER')" ontouchcancel="release('DPAD_CENTER')">OK</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('DPAD_RIGHT',event)" onmouseup="release('DPAD_RIGHT')" onmouseleave="release('DPAD_RIGHT')" ontouchstart="press('DPAD_RIGHT',event)" ontouchend="release('DPAD_RIGHT')" ontouchcancel="release('DPAD_RIGHT')">
                 <svg viewBox="0 0 24 24" style="transform: rotate(90deg)"><path d="M12 4l-8 12h16z"/></svg>
             </div>
-            <div class="btn btn-down" onclick="send('DPAD_DOWN')">
+
+            <div></div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('DPAD_DOWN',event)" onmouseup="release('DPAD_DOWN')" onmouseleave="release('DPAD_DOWN')" ontouchstart="press('DPAD_DOWN',event)" ontouchend="release('DPAD_DOWN')" ontouchcancel="release('DPAD_DOWN')">
                 <svg viewBox="0 0 24 24" style="transform: rotate(180deg)"><path d="M12 4l-8 12h16z"/></svg>
             </div>
+            <div></div>
         </div>
 
         <div class="btn-grid">
-            <div class="btn" onclick="send('BACK')">BACK</div>
-            <div class="btn" onclick="send('HOME')">HOME</div>
-            <div class="btn" onclick="send('MENU')">MENU</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('BACK',event)" onmouseup="release('BACK')" onmouseleave="release('BACK')" ontouchstart="press('BACK',event)" ontouchend="release('BACK')" ontouchcancel="release('BACK')">BACK</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('HOME',event)" onmouseup="release('HOME')" onmouseleave="release('HOME')" ontouchstart="press('HOME',event)" ontouchend="release('HOME')" ontouchcancel="release('HOME')">HOME</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('MENU',event)" onmouseup="release('MENU')" onmouseleave="release('MENU')" ontouchstart="press('MENU',event)" ontouchend="release('MENU')" ontouchcancel="release('MENU')">MENU</div>
         </div>
 
         <div class="btn-grid" style="grid-template-columns: 1fr 1fr;">
-            <div class="btn" onclick="send('VOLUME_DOWN')">VOL -</div>
-            <div class="btn" onclick="send('VOLUME_UP')">VOL +</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('VOLUME_DOWN',event)" onmouseup="release('VOLUME_DOWN')" onmouseleave="release('VOLUME_DOWN')" ontouchstart="press('VOLUME_DOWN',event)" ontouchend="release('VOLUME_DOWN')" ontouchcancel="release('VOLUME_DOWN')">VOL -</div>
+            <div class="btn" oncontextmenu="return false;" onmousedown="press('VOLUME_UP',event)" onmouseup="release('VOLUME_UP')" onmouseleave="release('VOLUME_UP')" ontouchstart="press('VOLUME_UP',event)" ontouchend="release('VOLUME_UP')" ontouchcancel="release('VOLUME_UP')">VOL +</div>
         </div>
 
-        <div style="margin-top: 10px; display: flex; gap: 10px;">
-            <input type="text" id="text-input" placeholder="Type here..." style="margin: 0; flex: 1;">
-            <button class="btn" onclick="sendText()" style="padding: 10px 15px;">SEND</button>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="text-input" placeholder="Type here..." style="margin: 0; flex: 1; padding: 12px; font-size: 0.9rem;">
+            <button class="btn" onclick="sendText()" style="background: var(--accent-color); color: #000; font-weight: bold; padding: 0 20px;">SEND</button>
         </div>
     </div>
 
     <script>
         let currentHost = '';
+        const keyMap = {'POWER': 26, 'DPAD_UP': 19, 'DPAD_DOWN': 20, 'DPAD_LEFT': 21, 'DPAD_RIGHT': 22, 'DPAD_CENTER': 66, 'BACK': 4, 'HOME': 3, 'MENU': 82, 'VOLUME_UP': 24, 'VOLUME_DOWN': 25, 'MUTE': 164, 'SETTINGS': 176};
 
-        async function sendText() {
-            const text = document.getElementById('text-input').value;
-            if (!text) return;
-            await fetch('/send_text', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({host: currentHost, text: text})
-            });
-            document.getElementById('text-input').value = '';
+        function press(key, e) {
+            if (e && e.cancelable) e.preventDefault();
+            sendCmd(key, 'START');
+            if (window.navigator.vibrate) window.navigator.vibrate(20);
         }
-
+        function release(key) {
+            sendCmd(key, 'STOP');
+        }
+        async function sendCmd(key, dir) {
+            fetch('/command', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: currentHost, key: keyMap[key] || key, direction: dir})
+            });
+        }
         async function connect() {
             const ip = document.getElementById('ip-input').value;
-            if (!ip) return;
-            currentHost = ip;
-            
             const resp = await fetch('/connect', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({host: ip})
             });
             const data = await resp.json();
-            
             if (data.status === 'connected') {
-                document.getElementById('setup').classList.add('hidden');
+                currentHost = ip;
+                document.getElementById('setup').style.display = 'none';
                 document.getElementById('status-dot').classList.add('online');
             } else {
-                startPairing();
+                startPairing(ip);
             }
         }
-
-        async function startPairing() {
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('pairing').classList.remove('hidden');
+        async function startPairing(ip) {
+            currentHost = ip;
             await fetch('/start_pairing', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({host: currentHost})
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: ip})
             });
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('pairing').classList.remove('hidden');
         }
-
         async function finishPairing() {
-            const code = document.getElementById('pairing-code').value;
+            const code = document.getElementById('pair-code').value;
             const resp = await fetch('/finish_pairing', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({host: currentHost, code: code})
             });
-            const data = await resp.json();
-            if (data.status === 'success') {
+            if (resp.ok) {
                 document.getElementById('pairing').classList.add('hidden');
                 document.getElementById('status-dot').classList.add('online');
-            } else {
-                alert('Pairing failed: ' + data.error);
             }
         }
-
-        async function send(key) {
-            const keyMap = {
-                'POWER': 26,
-                'DPAD_UP': 19,
-                'DPAD_DOWN': 20,
-                'DPAD_LEFT': 21,
-                'DPAD_RIGHT': 22,
-                'DPAD_CENTER': 66,
-                'BACK': 4,
-                'HOME': 3,
-                'MENU': 82,
-                'VOLUME_UP': 24,
-                'VOLUME_DOWN': 25,
-                'MUTE': 164,
-                'SETTINGS': 176
-            };
-            
-            const keyCode = keyMap[key] || key;
-            
-            await fetch('/command', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({host: currentHost, key: keyCode})
+        async function sendText() {
+            const text = document.getElementById('text-input').value;
+            if (!text) return;
+            fetch('/send_text', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({host: currentHost, text: text})
             });
+            document.getElementById('text-input').value = '';
         }
     </script>
 </body>
